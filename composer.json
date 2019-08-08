@@ -1,0 +1,24 @@
+{
+  "name": "ixapek/BuyItAgain",
+  "description": "This is the simple simulator for repeatable purchasings",
+  "minimum-stability": "stable",
+  "license": "GPL 2.0",
+  "authors": [
+    {
+      "name": "ixapek",
+      "email": "ixapek@gmail.com"
+    }
+  ],
+  "autoload": {
+    "classmap": [
+      "src/"
+    ]
+  },
+  "require": {
+    "php": "^7.1",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-pdo": "*"
+  }
+}
