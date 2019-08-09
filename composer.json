@@ -1,5 +1,5 @@
 {
-  "name": "ixapek/BuyItAgain",
+  "name": "ixapek/buy-it-again",
   "description": "This is the simple simulator for repeatable purchasings",
   "minimum-stability": "stable",
   "license": "GPL 2.0",
@@ -11,7 +11,8 @@
   ],
   "autoload": {
     "classmap": [
-      "src/"
+      "src/",
+      "Config.php"
     ]
   },
   "require": {

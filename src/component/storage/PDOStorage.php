@@ -217,7 +217,7 @@ class PDOStorage implements IStorage
             $fieldsTable[] = "`$field`";
             $fieldsValues[] = "?";
         }
-        return "(" . implode(',', $fieldsTable) . ") VALUES(" . $fieldsValues . ")";
+        return "(" . implode(',', $fieldsTable) . ") VALUES(" . implode(',', $fieldsValues) . ")";
     }
 
     /**

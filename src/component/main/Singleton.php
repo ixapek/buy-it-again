@@ -10,15 +10,10 @@ namespace ixapek\BuyItAgain\Component\Main;
  */
 trait Singleton
 {
+    use Ton;
+
     /** @var self $instance Instance container */
     protected static $instance;
-
-    /**
-     * Singleton constructor.
-     */
-    final protected function __construct()
-    {
-    }
 
     /**
      * @return self
@@ -29,20 +24,6 @@ trait Singleton
             (static::$instance === null) ?
                 static::$instance = new static() :
                 static::$instance;
-    }
-
-    /**
-     * Singleton protection.
-     */
-    final protected function __clone()
-    {
-    }
-
-    /**
-     * Singleton protection.
-     */
-    final protected function __wakeup()
-    {
     }
 
 }

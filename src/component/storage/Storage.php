@@ -6,6 +6,7 @@ namespace ixapek\BuyItAgain\Component\Storage;
 
 use ixapek\BuyItAgain\Component\Main\Multiton;
 use ixapek\BuyItAgain\Component\Storage\Exception\ConfigException;
+use ixapek\BuyItAgain\Config;
 
 /**
  * Class Storage
@@ -24,8 +25,8 @@ class Storage
      */
     public static function init(string $storage = null): IStorage
     {
-        if ($storage === null) {
-            $storage = getenv('storage.default');
+        if ($storage === null && true === defined(Config::class . '::STORAGE_DEFAULT')) {
+            $storage = Config::STORAGE_DEFAULT;
         }
 
         if (false === is_string($storage)) {
@@ -33,7 +34,11 @@ class Storage
         }
 
         if (false === isset(static::$instance[$storage])) {
-            $storageConfigs = getenv('storage.config');
+            if( false === defined(Config::class . '::STORAGE_CONFIG') ){
+                throw new ConfigException("Storage configs not exists");
+            }
+
+            $storageConfigs = Config::STORAGE_CONFIG;
             if (false === $storageConfigs || false === isset($storageConfigs[$storage])) {
                 throw new ConfigException("Storage $storage misconfiguration");
             }

@@ -6,7 +6,7 @@ namespace ixapek\BuyItAgain\Component\Main;
 
 trait Multiton
 {
-    use Singleton;
+    use Ton;
 
     /** @var self $instance Instances container */
     private static $instance = [];
