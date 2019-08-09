@@ -27,4 +27,6 @@ class Config
 
     /** @var string Default storage. Must exists as key in self::STORAGE_CONFIG */
     const STORAGE_DEFAULT = 'PDO';
+
+    const CHECK_URL = 'https://ya.ru';
 }

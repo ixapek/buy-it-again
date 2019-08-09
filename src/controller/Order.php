@@ -3,7 +3,7 @@
 
 namespace ixapek\BuyItAgain\Controller;
 
-
+use ixapek\BuyItAgain\Config;
 use ixapek\BuyItAgain\Component\Http\{
     Code,
     Exception\BadRequestException,
@@ -132,7 +132,10 @@ class Order extends AbstractController
      * @throws InternalErrorException
      */
     protected function checkRequest():void{
-        $checkResponse = Request::create('https://ya.ru')
+
+        $url = (defined(Config::class . '::CHECK_URL')) ? Config::CHECK_URL : 'ya.ru';
+
+        $checkResponse = Request::create($url)
                                 ->send();
         if($checkResponse->getCode() !== 200) {
             throw new InternalErrorException("Check request non-successful: code " . $checkResponse->getCode());
