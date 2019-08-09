@@ -18,7 +18,8 @@ class PDOStorage implements IStorage
 {
     /** @var PDO $pdoInstance */
     protected $pdoInstance;
-
+    /** @var bool $transaction Transaction started or not */
+    protected $transaction = false;
     /**
      * PDOStorage constructor.
      *
@@ -29,9 +30,8 @@ class PDOStorage implements IStorage
     public function __construct(array $config)
     {
         try {
-            // TODO: Check config params
             $this->setPdoInstance(
-                new PDO($config['dsn'], $config['user'], $config['password'], [
+                new PDO($config['dsn'] ?? '', $config['user'] ?? '', $config['password'] ?? '', [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 ])
             );
@@ -147,6 +147,7 @@ class PDOStorage implements IStorage
      * @param array  $condition
      *
      * @return bool
+     * @throws StorageException
      */
     public function update(array $values, string $entity, array $condition): bool
     {
@@ -159,11 +160,147 @@ class PDOStorage implements IStorage
         $execValues = array_values($values);
         $queryChunks[] = $this->makeWhere($condition, $execValues);
 
+        try {
+            $stmt = $this->getPdoInstance()->prepare(
+                implode(' ', $queryChunks)
+            );
+
+            return $stmt->execute($execValues);
+        } catch (PDOException $PDOException){
+            throw new StorageException("Storage update error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+        }
+    }
+
+    /**
+     * @param array  $values
+     * @param string $entity
+     *
+     * @return int
+     * @throws StorageException
+     */
+    public function insert(array $values, string $entity): int
+    {
+        $queryChunks = [
+            "INSERT INTO `$entity`",
+        ];
+
+        $queryChunks[] = $this->makeInsertFields($values);
+
         $stmt = $this->getPdoInstance()->prepare(
             implode(' ', $queryChunks)
         );
 
-        return $stmt->execute($execValues);
+        $execValues = array_values($values);
+        try {
+            $stmt->execute($execValues);
+
+            return intval($this->getPdoInstance()->lastInsertId());
+        } catch (PDOException $PDOException){
+            throw new StorageException("Storage insert error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+        }
+    }
+
+    /**
+     * @param string $entity
+     * @param array  $condition
+     *
+     * @return bool
+     * @throws StorageException
+     */
+    public function delete(string $entity, array $condition): bool
+    {
+        $queryChunks = [
+            "DELETE FROM `$entity`",
+        ];
+
+        $execValues = [];
+        $queryChunks[] = $this->makeWhere($condition, $execValues);
+
+        try {
+            $stmt = $this->getPdoInstance()->prepare(
+                implode(' ', $queryChunks)
+            );
+
+            return $stmt->execute($execValues);
+        } catch (PDOException $PDOException){
+            throw new StorageException("Storage delete error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+        }
+    }
+
+    /**
+     * Start transaction
+     *
+     * @throws StorageException
+     */
+    public function beginTransaction(): void
+    {
+        try {
+            // If transaction already started don't try start new
+            if( false === $this->isTransaction() ) {
+                $this->setTransaction(
+                    $this->getPdoInstance()->beginTransaction()
+                );
+            }
+        } catch (PDOException $PDOException){
+            throw new StorageException("Storage transaction start error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+        }
+    }
+
+    /**
+     * Persist transaction
+     *
+     * @throws StorageException
+     */
+    public function commit(): void
+    {
+        try {
+            // Commit persist only for started transaction
+            if( true === $this->isTransaction() ) {
+                $this->setTransaction(
+                    !$this->getPdoInstance()->commit()
+                );
+            }
+        } catch (PDOException $PDOException){
+            throw new StorageException("Storage transaction commit error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+        }
+    }
+
+    /**
+     * Rollback transaction
+     *
+     * @throws StorageException
+     */
+    public function rollback(): void
+    {
+        try {
+            // Commit rollback only for started transaction
+            if( true === $this->isTransaction() ) {
+                $this->setTransaction(
+                    !$this->getPdoInstance()->rollBack()
+                );
+            }
+        } catch (PDOException $PDOException){
+            throw new StorageException("Storage transaction rollback error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTransaction(): bool
+    {
+        return $this->transaction;
+    }
+
+    /**
+     * @param bool $transaction
+     *
+     * @return PDOStorage
+     */
+    public function setTransaction(bool $transaction): PDOStorage
+    {
+        $this->transaction = $transaction;
+        return $this;
     }
 
     /**
@@ -181,30 +318,6 @@ class PDOStorage implements IStorage
     }
 
     /**
-     * @param array  $values
-     * @param string $entity
-     *
-     * @return int
-     */
-    public function insert(array $values, string $entity): int
-    {
-        $queryChunks = [
-            "INSERT INTO `$entity`",
-        ];
-
-        $queryChunks[] = $this->makeInsertFields($values);
-
-        $stmt = $this->getPdoInstance()->prepare(
-            implode(' ', $queryChunks)
-        );
-
-        $execValues = array_values($values);
-        $stmt->execute($execValues);
-
-        return intval($this->getPdoInstance()->lastInsertId());
-    }
-
-    /**
      * @param array $values
      *
      * @return string
@@ -218,51 +331,5 @@ class PDOStorage implements IStorage
             $fieldsValues[] = "?";
         }
         return "(" . implode(',', $fieldsTable) . ") VALUES(" . implode(',', $fieldsValues) . ")";
-    }
-
-    /**
-     * @param string $entity
-     * @param array  $condition
-     *
-     * @return bool
-     */
-    public function delete(string $entity, array $condition): bool
-    {
-        $queryChunks = [
-            "DELETE FROM `$entity`",
-        ];
-
-        $execValues = [];
-        $queryChunks[] = $this->makeWhere($condition, $execValues);
-
-        $stmt = $this->getPdoInstance()->prepare(
-            implode(' ', $queryChunks)
-        );
-
-        return $stmt->execute($execValues);
-    }
-
-    /**
-     * Start transaction
-     */
-    public function beginTransaction(): void
-    {
-        $this->getPdoInstance()->beginTransaction();
-    }
-
-    /**
-     * Persist transaction
-     */
-    public function commit(): void
-    {
-        $this->getPdoInstance()->commit();
-    }
-
-    /**
-     * Rollback transaction
-     */
-    public function rollback(): void
-    {
-        $this->getPdoInstance()->rollBack();
     }
 }

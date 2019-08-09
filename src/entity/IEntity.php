@@ -11,7 +11,7 @@ use JsonSerializable;
  * All entity classes must implement this
  * Entity name for storage gets from class names or
  *
- * @package ixapek\BuyItAgain\Component\Storage
+ * @package ixapek\BuyItAgain
  */
 interface IEntity extends JsonSerializable
 {

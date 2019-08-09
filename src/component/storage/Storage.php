@@ -11,7 +11,7 @@ use ixapek\BuyItAgain\Config;
 /**
  * Class Storage
  *
- * @package ixapek\BuyItAgain\Component\Storage
+ * @package ixapek\BuyItAgain
  */
 class Storage
 {

@@ -10,7 +10,7 @@ use ixapek\BuyItAgain\Component\Storage\Exception\StorageException;
  *
  * Notation for works with entities in storage
  *
- * @package ixapek\BuyItAgain\Component\Storage
+ * @package ixapek\BuyItAgain
  */
 interface IStorage
 {
@@ -62,16 +62,19 @@ interface IStorage
 
     /**
      * Start transaction
+     * @throws StorageException
      */
     public function beginTransaction(): void;
 
     /**
      * Persist transaction
+     * @throws StorageException
      */
     public function commit(): void;
 
     /**
      * Rollback transaction
+     * @throws StorageException
      */
     public function rollback(): void;
 }

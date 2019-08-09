@@ -11,6 +11,7 @@ use ixapek\BuyItAgain\Component\Main\RandomHelper;
 use ixapek\BuyItAgain\Component\Storage\Exception\{
     ConfigException,
     StorageException};
+use ixapek\BuyItAgain\Component\Storage\Storage;
 use ixapek\BuyItAgain\Entity\ProductEntity;
 use ixapek\BuyItAgain\Repository\ProductRepository;
 use ixapek\BuyItAgain\Service\ProductService;
@@ -57,17 +58,26 @@ class ProductCollection extends AbstractController
         $productService = new ProductService();
 
         $generatedProducts = [];
-        for ($i = 0; $i < 20; $i++) {
-            /** @var ProductEntity $product */
-            $product = ProductEntity::init();
+        try {
+            Storage::init()->beginTransaction();
 
-            $productService->persist(
-                $product
-                    ->setName(RandomHelper::word())
-                    ->setPrice(RandomHelper::price())
-            );
+            for ($i = 0; $i < 20; $i++) {
+                /** @var ProductEntity $product */
+                $product = ProductEntity::init();
 
-            $generatedProducts[] = $product;
+                $productService->persist(
+                    $product
+                        ->setName(RandomHelper::word())
+                        ->setPrice(RandomHelper::price())
+                );
+
+                $generatedProducts[] = $product;
+            }
+
+            Storage::init()->commit();
+        } catch (StorageException $e){
+            Storage::init()->rollback();
+            throw $e;
         }
 
         return $this->response(

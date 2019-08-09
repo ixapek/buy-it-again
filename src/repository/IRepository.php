@@ -15,6 +15,7 @@ interface IRepository
      * @param int $id Entity id
      *
      * @return IEntity
+     * @throws StorageException
      */
     public function getOne(int $id): IEntity;
 
@@ -32,6 +33,7 @@ interface IRepository
      * @param int   $limit
      *
      * @return IEntity[]
+     * @throws StorageException
      */
     public function getBy(array $condition, array $sort = [], int $limit = 0): array;
 

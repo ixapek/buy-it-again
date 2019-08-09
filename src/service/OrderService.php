@@ -3,13 +3,20 @@
 
 namespace ixapek\BuyItAgain\Service;
 
-use ixapek\BuyItAgain\Component\Storage\Exception\ConfigException;
-use ixapek\BuyItAgain\Component\Storage\Exception\StorageException;
-use ixapek\BuyItAgain\Component\Storage\Storage;
-use ixapek\BuyItAgain\Entity\IEntity;
-use ixapek\BuyItAgain\Entity\OrderEntity;
-use ixapek\BuyItAgain\Entity\ProductEntity;
+use ixapek\BuyItAgain\Component\Storage\{
+    Exception\ConfigException,
+    Exception\StorageException,
+    Storage};
+use ixapek\BuyItAgain\Entity\{
+    IEntity,
+    OrderEntity,
+    ProductEntity};
 
+/**
+ * Class OrderService
+ *
+ * @package ixapek\BuyItAgain
+ */
 class OrderService extends AbstractService
 {
     /**
@@ -22,8 +29,9 @@ class OrderService extends AbstractService
      */
     protected function add(IEntity $entity): void
     {
-        Storage::init()->beginTransaction();
         try {
+            Storage::init()->beginTransaction();
+
             /** @var OrderEntity $entity */
             $newId = Storage::init()->insert(
                 [

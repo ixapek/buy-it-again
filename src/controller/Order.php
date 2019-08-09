@@ -48,7 +48,6 @@ class Order extends AbstractController
      */
     public function post()
     {
-
         $request = Request::current();
 
         $productIds = $request->getArray('products');
@@ -75,7 +74,6 @@ class Order extends AbstractController
      */
     public function put()
     {
-
         $request = Request::current();
 
         $pay = $request->getFloat('pay');
@@ -113,7 +111,9 @@ class Order extends AbstractController
         }
 
         $orderService = new OrderService();
-        $orderService->persist($order->setStatus(OrderEntity::STATUS_PAY));
+        $orderService->persist(
+            $order->setStatus(OrderEntity::STATUS_PAY)
+        );
     }
 
     /**

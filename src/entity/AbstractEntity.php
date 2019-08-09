@@ -10,7 +10,7 @@ use ixapek\BuyItAgain\Repository\IRepository;
 /**
  * Class AbstractEntity
  *
- * @package ixapek\BuyItAgain\Entity
+ * @package ixapek\BuyItAgain
  */
 abstract class AbstractEntity implements IEntity
 {
