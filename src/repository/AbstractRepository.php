@@ -4,7 +4,6 @@
 namespace ixapek\BuyItAgain\Repository;
 
 
-use ixapek\BuyItAgain\Component\Main\Singleton;
 use ixapek\BuyItAgain\Component\Storage\Exception\ConfigException;
 use ixapek\BuyItAgain\Component\Storage\Storage;
 use ixapek\BuyItAgain\Entity\{
@@ -18,7 +17,6 @@ use ixapek\BuyItAgain\Entity\{
  */
 abstract class AbstractRepository implements IRepository
 {
-    use Singleton;
 
     /** @var IEntity[] $entities Entities collection */
     protected $entities = [];

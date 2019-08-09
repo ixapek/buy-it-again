@@ -13,19 +13,19 @@ namespace ixapek\BuyItAgain\Component\Http;
 abstract class Message
 {
     /** @var array[]|int[]|bool[]|string[]|float[] */
-    protected $params;
+    protected $params = [];
     /** @var string $method POST|PUT|GET|DELETE */
-    protected $method;
+    protected $method = Method::GET;
     /** @var string $url */
-    protected $url;
+    protected $url = '';
     /** @var string $body */
-    protected $body;
+    protected $body = '';
     /** @var array $headers */
-    protected $headers;
+    protected $headers = [];
     /** @var string $error */
-    protected $error;
+    protected $error = '';
     /** @var int $code */
-    protected $code;
+    protected $code = 0;
 
     /**
      * Get integer request param
@@ -58,9 +58,9 @@ abstract class Message
      *
      * @return array|null
      */
-    public function getArray(string $key): ?array
+    public function getIntArray(string $key): ?array
     {
-        return filter_var($this->params[$key] ?? null, FILTER_REQUIRE_ARRAY, FILTER_NULL_ON_FAILURE);
+        return filter_var($this->params[$key] ?? null, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE | FILTER_REQUIRE_ARRAY);
     }
 
     /**

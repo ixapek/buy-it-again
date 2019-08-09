@@ -20,7 +20,7 @@ class Request extends Message
      *
      * @return Request
      */
-    public static function create(string $url = null): Request
+    public static function create(?string $url = null): Request
     {
         $request = new static();
         if (null !== $url) {
@@ -102,18 +102,18 @@ class Request extends Message
         $responseBody = curl_exec($curl);
         $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
+        $response = new Response();
+        if (curl_errno($curl) > 0) {
+            $response->setError(curl_error($curl));
+        }
+
         curl_close($curl);
 
-        $response = new Response();
         $response
             ->setMethod($this->getMethod())
             ->setBody($responseBody)
             ->setHeaders($responseHeaders)
             ->setCode($responseCode);
-
-        if (curl_errno($curl) > 0) {
-            $response->setError(curl_error($curl));
-        }
 
         return $response;
     }

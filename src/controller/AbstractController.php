@@ -11,7 +11,7 @@ abstract class AbstractController implements IController
 {
 
     /**
-     * Make Response object from data
+     * Make Response object from data. If need some changes with data - make it here
      *
      * @param array $data    Response data (used as part of body)
      * @param int   $code    Response code
@@ -21,18 +21,6 @@ abstract class AbstractController implements IController
      */
     protected function response(array $data, int $code, array $headers = []): Response
     {
-        $body = json_encode([
-            'status'    => $code,
-            'error'     => '',
-            'timestamp' => time(),
-            'data'      => $data,
-        ]);
-
-        $result = new Response();
-
-        return $result
-            ->setCode($code)
-            ->setHeaders($headers)
-            ->setBody($body);
+        return Response::create($data, $code, $headers);
     }
 }

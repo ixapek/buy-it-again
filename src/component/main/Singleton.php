@@ -13,7 +13,7 @@ trait Singleton
     use Ton;
 
     /** @var self $instance Instance container */
-    protected static $instance;
+    private static $instance;
 
     /**
      * @return self

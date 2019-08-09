@@ -3,6 +3,7 @@
 
 namespace ixapek\BuyItAgain\Repository;
 
+use ixapek\BuyItAgain\Component\Main\Singleton;
 use ixapek\BuyItAgain\Entity\{
     IEntity,
     ProductEntity};
@@ -14,6 +15,8 @@ use ixapek\BuyItAgain\Entity\{
  */
 class ProductRepository extends AbstractRepository
 {
+    use Singleton;
+
     /**
      * @inheritDoc
      * @return ProductEntity

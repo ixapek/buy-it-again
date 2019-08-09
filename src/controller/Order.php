@@ -5,11 +5,13 @@ namespace ixapek\BuyItAgain\Controller;
 
 
 use ixapek\BuyItAgain\Component\Http\{
+    Code,
     Exception\BadRequestException,
     Exception\InternalErrorException,
     Exception\NotFoundException,
     Method,
-    Request};
+    Request,
+    Response};
 use ixapek\BuyItAgain\Component\Storage\{
     Exception\ConfigException,
     Exception\StorageException};
@@ -46,11 +48,11 @@ class Order extends AbstractController
      * @throws ConfigException
      * @throws StorageException
      */
-    public function post()
+    public function post():Response
     {
         $request = Request::current();
 
-        $productIds = $request->getArray('products');
+        $productIds = $request->getIntArray('products');
 
         $orderService = new OrderService();
 
@@ -61,6 +63,11 @@ class Order extends AbstractController
         $order->setProducts($products);
 
         $orderService->persist($order);
+
+        return $this->response(
+            [$order],
+            Code::CREATED
+        );
     }
 
     /**
@@ -72,7 +79,7 @@ class Order extends AbstractController
      * @throws StorageException
      * @throws InternalErrorException
      */
-    public function put()
+    public function put():Response
     {
         $request = Request::current();
 
@@ -106,24 +113,29 @@ class Order extends AbstractController
             throw new BadRequestException("Pay sum is incorrect");
         }
 
-        if( false === $this->checkRequest() ){
-            throw new InternalErrorException("Check request non-successful");
-        }
+        $this->checkRequest();
 
         $orderService = new OrderService();
         $orderService->persist(
             $order->setStatus(OrderEntity::STATUS_PAY)
+        );
+
+        return $this->response(
+            [$order],
+            Code::OK
         );
     }
 
     /**
      * Send request and check success status
      *
-     * @return bool
+     * @throws InternalErrorException
      */
-    protected function checkRequest():bool{
-        $checkResponse = Request::create('ya.ru')->send();
-
-        return ($checkResponse->getCode() === 200);
+    protected function checkRequest():void{
+        $checkResponse = Request::create('https://ya.ru')
+                                ->send();
+        if($checkResponse->getCode() !== 200) {
+            throw new InternalErrorException("Check request non-successful: code " . $checkResponse->getCode());
+        }
     }
 }

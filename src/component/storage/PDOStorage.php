@@ -167,7 +167,7 @@ class PDOStorage implements IStorage
 
             return $stmt->execute($execValues);
         } catch (PDOException $PDOException){
-            throw new StorageException("Storage update error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+            throw new StorageException("Storage update error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
@@ -196,7 +196,7 @@ class PDOStorage implements IStorage
 
             return intval($this->getPdoInstance()->lastInsertId());
         } catch (PDOException $PDOException){
-            throw new StorageException("Storage insert error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+            throw new StorageException("Storage insert error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
@@ -223,7 +223,7 @@ class PDOStorage implements IStorage
 
             return $stmt->execute($execValues);
         } catch (PDOException $PDOException){
-            throw new StorageException("Storage delete error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+            throw new StorageException("Storage delete error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
@@ -242,7 +242,7 @@ class PDOStorage implements IStorage
                 );
             }
         } catch (PDOException $PDOException){
-            throw new StorageException("Storage transaction start error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+            throw new StorageException("Storage transaction start error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
@@ -261,7 +261,7 @@ class PDOStorage implements IStorage
                 );
             }
         } catch (PDOException $PDOException){
-            throw new StorageException("Storage transaction commit error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+            throw new StorageException("Storage transaction commit error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
@@ -280,7 +280,7 @@ class PDOStorage implements IStorage
                 );
             }
         } catch (PDOException $PDOException){
-            throw new StorageException("Storage transaction rollback error: " . $PDOException->getMessage(), $PDOException->getCode(), $PDOException);
+            throw new StorageException("Storage transaction rollback error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 

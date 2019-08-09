@@ -4,6 +4,7 @@
 namespace ixapek\BuyItAgain\Repository;
 
 
+use ixapek\BuyItAgain\Component\Main\Singleton;
 use ixapek\BuyItAgain\Component\Storage\Exception\ConfigException;
 use ixapek\BuyItAgain\Component\Storage\Storage;
 use ixapek\BuyItAgain\Entity\IEntity;
@@ -17,6 +18,7 @@ use ixapek\BuyItAgain\Entity\UserEntity;
  */
 class OrderRepository extends AbstractRepository
 {
+    use Singleton;
 
     /**
      * @param OrderEntity $entity
@@ -57,7 +59,8 @@ class OrderRepository extends AbstractRepository
 
         $this->addEntity(
             $orderEntity
-                ->setUserId($entityValues['userId'])
+                ->setUserId($entityValues['user_id'])
+                ->setStatus($entityValues['status'])
                 ->setId($entityValues['id'])
         );
 

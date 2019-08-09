@@ -3,8 +3,6 @@
 
 namespace ixapek\BuyItAgain\Component\Http\Exception;
 
-
-use Exception;
 use ixapek\BuyItAgain\Component\Http\Code;
 
 /**
@@ -12,7 +10,7 @@ use ixapek\BuyItAgain\Component\Http\Code;
  *
  * @package ixapek\BuyItAgain
  */
-class NotFoundException extends Exception
+class NotFoundException extends HttpException
 {
     protected $code = Code::NOT_FOUND;
 }

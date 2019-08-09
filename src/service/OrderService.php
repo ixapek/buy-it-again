@@ -42,16 +42,16 @@ class OrderService extends AbstractService
             );
             $entity->setId($newId);
 
-            $orderProductsRows = [];
+
             foreach ($entity->getProducts() as $product) {
                 /** @var ProductEntity $product */
-                $orderProductsRows[] = [
-                    'order_id'   => $entity->getId(),
-                    'product_id' => $product->getId(),
-                ];
+                Storage::init()->insert(
+                    [
+                        'order_id'   => $entity->getId(),
+                        'product_id' => $product->getId(),
+                    ],
+                    'order_product');
             }
-
-            Storage::init()->insert($orderProductsRows, 'order_products');
 
             Storage::init()->commit();
         } catch (StorageException $e) {

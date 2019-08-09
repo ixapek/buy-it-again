@@ -38,7 +38,12 @@ class OrderEntity extends AbstractEntity
      */
     public function getFields(): array
     {
-        return ['id', 'user_id'];
+        return ['id', 'user_id', 'status'];
+    }
+
+    public function getEntityName(): ?string
+    {
+        return 'order';
     }
 
     /**
@@ -50,6 +55,7 @@ class OrderEntity extends AbstractEntity
     {
         return [
             'id'       => $this->getId(),
+            'status'   => $this->getStatus(),
             'user'     => $this->getUser(),
             'products' => $this->getProducts(),
         ];
