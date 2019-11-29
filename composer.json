@@ -20,6 +20,8 @@
     "ext-curl": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "ext-sysvsem": "*",
+    "ext-http": "*"
   }
 }

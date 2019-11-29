@@ -4,9 +4,9 @@
 namespace ixapek\BuyItAgain\Component\Http\Exception;
 
 
-use Exception;
+use HttpException as CoreHttpException;
 
-class HttpException extends Exception
+class HttpException extends CoreHttpException
 {
 
 }

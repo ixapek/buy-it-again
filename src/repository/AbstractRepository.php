@@ -61,7 +61,7 @@ abstract class AbstractRepository implements IRepository
             $entity = $this->mapFrom($entityValues);
             $this->addEntity($entity);
 
-            $result[] = $entity;
+            $result[$entity->getId()] = $entity;
         }
 
         return $result;

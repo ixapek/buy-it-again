@@ -72,11 +72,18 @@ class Response extends Message
      */
     public function render(): void
     {
+        $code = $this->getCode() ?? Code::OK;
+
+        // With status 304 response must be with empty body
+        if( $code === Code::NOT_MODIFIED ){
+            $this->setBody('');
+        }
+
         foreach ($this->getHeaders() as $header => $value) {
             header("$header: $value");
         }
 
-        http_response_code($this->getCode() ?? Code::OK);
+        http_response_code($code);
 
         echo $this->getBody();
     }

@@ -20,6 +20,9 @@ class PDOStorage implements IStorage
     protected $pdoInstance;
     /** @var bool $transaction Transaction started or not */
     protected $transaction = false;
+    /** @var array $tables List of tables */
+    protected $tables;
+
     /**
      * PDOStorage constructor.
      *
@@ -41,41 +44,48 @@ class PDOStorage implements IStorage
     }
 
     /**
-     * @param array  $fields
+     * @param array $fields
      * @param string $entity
-     * @param array  $condition
-     * @param array  $sort
-     * @param int    $limit
+     * @param array $condition
+     * @param array $sort
+     * @param int $limit
      *
      * @return array
+     * @throws StorageException
      */
     public function select(array $fields, string $entity, array $condition = [], array $sort = [], int $limit = 0): array
     {
-        $queryChunks = [
-            "SELECT `" . implode('`,`', $fields) . "` FROM `$entity`",
-        ];
+        try {
+            $this->checkTable($entity);
 
-        $execValues = [];
+            $queryChunks = [
+                "SELECT `" . implode('`,`', $fields) . "` FROM `$entity`",
+            ];
 
-        if (false === empty($condition)) {
-            $queryChunks[] = $this->makeWhere($condition, $execValues);
+            $execValues = [];
+
+            if (false === empty($condition)) {
+                $queryChunks[] = $this->makeWhere($condition, $execValues);
+            }
+
+            if (false === empty($sort)) {
+                $queryChunks[] = $this->makeSort($sort);
+            }
+
+            if ($limit > 0) {
+                $queryChunks[] = "LIMIT $limit";
+            }
+
+            $stmt = $this->getPdoInstance()->prepare(
+                implode(' ', $queryChunks)
+            );
+
+            $stmt->execute($execValues);
+
+            return $stmt->fetchAll();
+        } catch (PDOException $PDOException) {
+            throw new StorageException("Storage update error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
-
-        if (false === empty($sort)) {
-            $queryChunks[] = $this->makeSort($sort);
-        }
-
-        if ($limit > 0) {
-            $queryChunks[] = "LIMIT $limit";
-        }
-
-        $stmt = $this->getPdoInstance()->prepare(
-            implode(' ', $queryChunks)
-        );
-
-        $stmt->execute($execValues);
-
-        return $stmt->fetchAll();
     }
 
     /**
@@ -142,37 +152,40 @@ class PDOStorage implements IStorage
     }
 
     /**
-     * @param array  $values
+     * @param array $values
      * @param string $entity
-     * @param array  $condition
+     * @param array $condition
      *
      * @return bool
      * @throws StorageException
      */
     public function update(array $values, string $entity, array $condition): bool
     {
-        $queryChunks = [
-            "UPDATE `$entity` SET",
-        ];
-
-        $queryChunks[] = $this->makeUpdateFields($values);
-
-        $execValues = array_values($values);
-        $queryChunks[] = $this->makeWhere($condition, $execValues);
-
         try {
+            $this->checkTable($entity);
+
+            $queryChunks = [
+                "UPDATE `$entity` SET",
+            ];
+
+            $queryChunks[] = $this->makeUpdateFields($values);
+
+            $execValues = array_values($values);
+            $queryChunks[] = $this->makeWhere($condition, $execValues);
+
+
             $stmt = $this->getPdoInstance()->prepare(
                 implode(' ', $queryChunks)
             );
 
             return $stmt->execute($execValues);
-        } catch (PDOException $PDOException){
+        } catch (PDOException $PDOException) {
             throw new StorageException("Storage update error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
     /**
-     * @param array  $values
+     * @param array $values
      * @param string $entity
      *
      * @return int
@@ -180,49 +193,55 @@ class PDOStorage implements IStorage
      */
     public function insert(array $values, string $entity): int
     {
-        $queryChunks = [
-            "INSERT INTO `$entity`",
-        ];
-
-        $queryChunks[] = $this->makeInsertFields($values);
-
-        $stmt = $this->getPdoInstance()->prepare(
-            implode(' ', $queryChunks)
-        );
-
-        $execValues = array_values($values);
         try {
+            $this->checkTable($entity);
+
+            $queryChunks = [
+                "INSERT INTO `$entity`",
+            ];
+
+            $queryChunks[] = $this->makeInsertFields($values);
+
+            $stmt = $this->getPdoInstance()->prepare(
+                implode(' ', $queryChunks)
+            );
+
+            $execValues = array_values($values);
+
             $stmt->execute($execValues);
 
             return intval($this->getPdoInstance()->lastInsertId());
-        } catch (PDOException $PDOException){
+        } catch (PDOException $PDOException) {
             throw new StorageException("Storage insert error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
 
     /**
      * @param string $entity
-     * @param array  $condition
+     * @param array $condition
      *
      * @return bool
      * @throws StorageException
      */
     public function delete(string $entity, array $condition): bool
     {
-        $queryChunks = [
-            "DELETE FROM `$entity`",
-        ];
-
-        $execValues = [];
-        $queryChunks[] = $this->makeWhere($condition, $execValues);
-
         try {
+            $this->checkTable($entity);
+
+            $queryChunks = [
+                "DELETE FROM `$entity`",
+            ];
+
+            $execValues = [];
+            $queryChunks[] = $this->makeWhere($condition, $execValues);
+
+
             $stmt = $this->getPdoInstance()->prepare(
                 implode(' ', $queryChunks)
             );
 
             return $stmt->execute($execValues);
-        } catch (PDOException $PDOException){
+        } catch (PDOException $PDOException) {
             throw new StorageException("Storage delete error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
@@ -236,12 +255,12 @@ class PDOStorage implements IStorage
     {
         try {
             // If transaction already started don't try start new
-            if( false === $this->isTransaction() ) {
+            if (false === $this->isTransaction()) {
                 $this->setTransaction(
                     $this->getPdoInstance()->beginTransaction()
                 );
             }
-        } catch (PDOException $PDOException){
+        } catch (PDOException $PDOException) {
             throw new StorageException("Storage transaction start error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
@@ -255,12 +274,12 @@ class PDOStorage implements IStorage
     {
         try {
             // Commit persist only for started transaction
-            if( true === $this->isTransaction() ) {
+            if (true === $this->isTransaction()) {
                 $this->setTransaction(
                     !$this->getPdoInstance()->commit()
                 );
             }
-        } catch (PDOException $PDOException){
+        } catch (PDOException $PDOException) {
             throw new StorageException("Storage transaction commit error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
@@ -274,12 +293,12 @@ class PDOStorage implements IStorage
     {
         try {
             // Commit rollback only for started transaction
-            if( true === $this->isTransaction() ) {
+            if (true === $this->isTransaction()) {
                 $this->setTransaction(
                     !$this->getPdoInstance()->rollBack()
                 );
             }
-        } catch (PDOException $PDOException){
+        } catch (PDOException $PDOException) {
             throw new StorageException("Storage transaction rollback error: " . $PDOException->getMessage(), intval($PDOException->getCode()), $PDOException);
         }
     }
@@ -290,6 +309,31 @@ class PDOStorage implements IStorage
     public function isTransaction(): bool
     {
         return $this->transaction;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTables(): array
+    {
+        if (null === $this->tables) {
+            $tables = $this->getPdoInstance()->query('SHOW TABLES')->fetchColumn();
+            // Table in keys for faster check exists
+            $this->tables = array_flip($tables);
+        }
+        return $this->tables;
+    }
+
+    /**
+     * @param string $table
+     * @throws StorageException
+     */
+    public function checkTable(string $table): void
+    {
+        $tables = $this->getTables();
+        if (false === array_key_exists($table, $tables)) {
+            throw new StorageException("Table $table not exists");
+        }
     }
 
     /**

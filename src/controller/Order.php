@@ -3,6 +3,7 @@
 
 namespace ixapek\BuyItAgain\Controller;
 
+use ixapek\BuyItAgain\Component\Main\Semaphore;
 use ixapek\BuyItAgain\Config;
 use ixapek\BuyItAgain\Component\Http\{
     Code,
@@ -31,7 +32,6 @@ use ixapek\BuyItAgain\Service\OrderService;
  */
 class Order extends AbstractController
 {
-
     /**
      * Get allowed methods for controller
      *
@@ -47,6 +47,7 @@ class Order extends AbstractController
      *
      * @throws ConfigException
      * @throws StorageException
+     * @throws BadRequestException
      */
     public function post():Response
     {
@@ -55,8 +56,12 @@ class Order extends AbstractController
         $productIds = $request->getIntArray('products');
 
         $orderService = new OrderService();
-
         $products = ProductRepository::init()->getBy(['id' => $productIds]);
+
+        $diff = array_diff($productIds, array_keys($products));
+        if( false === empty($diff) ){
+            throw new BadRequestException("Products with id: ".implode(', ', $diff)." not exists");
+        }
 
         /** @var OrderEntity $order */
         $order = OrderEntity::init();
@@ -113,17 +118,31 @@ class Order extends AbstractController
             throw new BadRequestException("Pay sum is incorrect");
         }
 
-        $this->checkRequest();
+        // Semaphore lock for excluding double pay
+        $semId = $this->getSemId($order);
+        if( true === Semaphore::init()->acquire($semId) ) {
 
-        $orderService = new OrderService();
-        $orderService->persist(
-            $order->setStatus(OrderEntity::STATUS_PAY)
-        );
+            $this->checkRequest();
 
-        return $this->response(
-            [$order],
-            Code::OK
-        );
+            $orderService = new OrderService();
+            $orderService->persist(
+                $order->setStatus(OrderEntity::STATUS_PAY)
+            );
+
+            $response = $this->response(
+                [$order],
+                Code::OK
+            );
+
+            Semaphore::init()->release($semId);
+        } else {
+            $response = $this->response(
+                [$order],
+                Code::NOT_MODIFIED
+            );
+        }
+
+        return $response;
     }
 
     /**
@@ -140,5 +159,15 @@ class Order extends AbstractController
         if($checkResponse->getCode() !== 200) {
             throw new InternalErrorException("Check request non-successful: code " . $checkResponse->getCode());
         }
+    }
+
+    /**
+     * Get se
+     *
+     * @param OrderEntity $order
+     * @return int
+     */
+    private function getSemId(OrderEntity $order):int{
+        return intval(Semaphore::ORDER_PAY . $order->getId());
     }
 }

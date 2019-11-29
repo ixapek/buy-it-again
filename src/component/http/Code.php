@@ -14,6 +14,8 @@ class Code
     public const OK = 200;
     /** @var int Successful created */
     public const CREATED = 201;
+    /** @var int Content not modified or double request */
+    public const NOT_MODIFIED = 304;
     /** @var int Request with error */
     public const BAD_REQUEST = 400;
     /** @var int Requested page or item isn't exists */
